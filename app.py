@@ -1,11 +1,15 @@
-from flask import Flask, render_template, Response, request, url_for
+import streamlit as st
 import cv2
 from ultralytics import YOLO
+import os
+from PIL import Image
 
-app = Flask(__name__)
+# === Load Model ===
+@st.cache_resource
+def load_model():
+    return YOLO("model/best.pt")
 
-# Load YOLOv8 Classification Model
-model = YOLO("model/best.pt")
+model = load_model()
 
 # Mapping class → label Indo
 classes = {
@@ -19,73 +23,60 @@ classes = {
     "surprise": "Terkejut"
 }
 
-camera = None
-device_id = 0  # default kamera 0
+# === Fungsi untuk ambil gambar ikon ===
+def get_class_image(class_name):
+    static_dir = "static/images"
+    exts = ["jpg", "jpeg", "png"]
+    for ext in exts:
+        path = os.path.join(static_dir, f"{class_name}.{ext}")
+        if os.path.exists(path):
+            return path
+    return os.path.join(static_dir, "default.jpg")  # fallback
 
+# === Tampilan Streamlit ===
+st.title("🎭 Deteksi Emosi Wajah Realtime")
+st.write("Aplikasi ini dapat mengenali ekspresi wajah menggunakan **YOLOv8 Classification**.")
 
-@app.route('/')
-def index():
-    return render_template('index.html', classes=classes)
+st.subheader("✨ Emosi yang dapat dikenali:")
+cols = st.columns(4)
+for i, (eng, indo) in enumerate(classes.items()):
+    with cols[i % 4]:
+        img_path = get_class_image(eng)
+        try:
+            img = Image.open(img_path).convert("RGB")
+            img = img.resize((200, 200))
+            st.image(img, caption=f"{indo} ({eng})", use_container_width=False)
+        except:
+            st.write(f"{indo} ({eng})")
 
+st.markdown("---")
 
-@app.route('/detect')
-def detect():
-    return render_template('detect.html')
+# Dropdown untuk pilih kamera
+device_id = st.selectbox("Pilih Kamera:", [0, 1, 2], index=0)
 
+# Checkbox untuk nyalakan kamera
+run = st.checkbox("▶️ Nyalakan Kamera")
+FRAME_WINDOW = st.image([])
 
-@app.route('/set_camera', methods=['POST'])
-def set_camera():
-    global device_id, camera
-    new_id = int(request.form.get("device_id", 0))
+cap = cv2.VideoCapture(device_id)
 
-    if camera is not None:
-        camera.release()
-        camera = None
+while run:
+    ret, frame = cap.read()
+    if not ret:
+        st.error("Tidak bisa membuka kamera")
+        break
 
-    device_id = new_id
-    return "Camera set to " + str(device_id)
+    # Prediksi emosi
+    results = model.predict(frame, imgsz=224, verbose=False)
+    probs = results[0].probs
+    cls_id = int(probs.top1)
+    conf = float(probs.top1conf)
+    pred_class = list(classes.keys())[cls_id]
 
+    # Tambahkan teks ke frame
+    cv2.putText(frame, f"{classes[pred_class]} {conf:.2f}", (30, 50),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 
-def gen_frames():
-    global camera, device_id
-    camera = cv2.VideoCapture(device_id)
+    FRAME_WINDOW.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            results = model.predict(frame, verbose=False)
-
-            if results and len(results[0].probs) > 0:
-                cls_id = int(results[0].probs.top1)
-                conf = float(results[0].probs.top1conf)
-                class_name = list(classes.keys())[cls_id]
-                label_indo = classes[class_name]
-
-                cv2.putText(frame, f"{label_indo} {conf:.2f}",
-                            (30, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                            1.2, (0, 255, 0), 3)
-
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/stop_camera')
-def stop_camera():
-    global camera
-    if camera is not None:
-        camera.release()
-        camera = None
-    return "Camera stopped"
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+cap.release()
