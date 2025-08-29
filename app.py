@@ -1,11 +1,12 @@
 import streamlit as st
 from ultralytics import YOLO
-import av
+import os
+from PIL import Image
 import cv2
-import numpy as np
+import av
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 
-# === Load Model YOLOv8 Classification ===
+# === Load Model ===
 @st.cache_resource
 def load_model():
     return YOLO("model/best.pt")
@@ -24,18 +25,37 @@ classes = {
     "surprise": "Terkejut"
 }
 
+# === Fungsi untuk ambil gambar ikon ===
+def get_class_image(class_name):
+    static_dir = "static/images"
+    exts = ["jpg", "jpeg", "png"]
+    for ext in exts:
+        path = os.path.join(static_dir, f"{class_name}.{ext}")
+        if os.path.exists(path):
+            return path
+    return os.path.join(static_dir, "default.jpg")  # fallback
+
+# === Tampilan Streamlit ===
 st.title("🎭 Deteksi Emosi Wajah Realtime")
-st.write("Menggunakan **YOLOv8 Classification** + **Streamlit WebRTC**")
+st.write("Aplikasi ini dapat mengenali ekspresi wajah menggunakan **YOLOv8 Classification**.")
 
 st.subheader("✨ Emosi yang dapat dikenali:")
 cols = st.columns(4)
 for i, (eng, indo) in enumerate(classes.items()):
     with cols[i % 4]:
-        st.markdown(f"- **{indo}** ({eng})")
+        img_path = get_class_image(eng)
+        try:
+            img = Image.open(img_path).convert("RGB")
+            img = img.resize((200, 200))
+            st.image(img, caption=f"{indo} ({eng})", use_container_width=True)
+        except:
+            st.write(f"{indo} ({eng})")
 
 st.markdown("---")
 
-# Konfigurasi WebRTC (supaya bisa jalan di cloud juga)
+st.subheader("📹 Kamera Realtime")
+
+# === Konfigurasi WebRTC ===
 RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
 )
@@ -53,13 +73,13 @@ class EmotionProcessor(VideoProcessorBase):
         pred_class = list(classes.keys())[cls_id]
         label = f"{classes[pred_class]} ({conf:.2f})"
 
-        # Tampilkan label di frame
+        # Tambahkan teks ke frame
         cv2.putText(img, label, (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# Jalankan kamera dengan WebRTC
+# Jalankan kamera dengan WebRTC (otomatis ada tombol Start/Stop)
 webrtc_streamer(
     key="emotion-detect",
     mode="recvonly",
