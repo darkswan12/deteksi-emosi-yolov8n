@@ -35,15 +35,15 @@ def get_class_image(class_name):
             return path
     return os.path.join(static_dir, "default.jpg")  # fallback
 
-# === Sidebar Navigasi ===
-page = st.sidebar.radio("📌 Navigasi", ["Beranda", "Deteksi Foto", "Deteksi Realtime"])
+# === Sidebar Navigasi (Dropdown) ===
+page = st.sidebar.selectbox("📌 Pilih Halaman", ["Beranda", "Deteksi Foto", "Deteksi Realtime"])
 
 # ===========================
 # HALAMAN 1 - BERANDA
 # ===========================
 if page == "Beranda":
     st.title("🎭 Deteksi Emosi Wajah")
-    st.write("Aplikasi ini dapat mengenali ekspresi wajah menggunakan **YOLOv8 Classification**.")
+    st.write("Aplikasi ini dapat mengenali ekspresi wajah menggunakan Convolutional Neural Network (CNN).")
     
     st.subheader("✨ Emosi yang dapat dikenali:")
     cols = st.columns(4)
