@@ -55,17 +55,21 @@ st.markdown("---")
 
 st.subheader("📹 Kamera Realtime")
 
-# === Konfigurasi WebRTC ===
+# Dropdown pilih kamera
+camera_option = st.selectbox(
+    "Pilih Kamera",
+    ["Default", "Kamera Depan (user)", "Kamera Belakang (environment)"]
+)
+
+# Konfigurasi WebRTC
 RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
 )
 
-# === Video Processor ===
+# Processor Video
 class EmotionProcessor(VideoProcessorBase):
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
-
-        # Prediksi emosi
         results = model.predict(img, imgsz=224, verbose=False)
         probs = results[0].probs
         cls_id = int(probs.top1)
@@ -73,17 +77,23 @@ class EmotionProcessor(VideoProcessorBase):
         pred_class = list(classes.keys())[cls_id]
         label = f"{classes[pred_class]} ({conf:.2f})"
 
-        # Tambahkan teks ke frame
         cv2.putText(img, label, (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# Jalankan kamera dengan WebRTC (otomatis ada tombol Start/Stop)
+# Set constraints sesuai pilihan kamera
+constraints = {"video": True, "audio": False}
+if camera_option == "Kamera Depan (user)":
+    constraints = {"video": {"facingMode": "user"}, "audio": False}
+elif camera_option == "Kamera Belakang (environment)":
+    constraints = {"video": {"facingMode": "environment"}, "audio": False}
+
+# Jalankan kamera
 webrtc_streamer(
     key="emotion-detect",
-    mode=WebRtcMode.RECVONLY,   # ✅ pakai enum
+    mode=WebRtcMode.RECVONLY,
     video_processor_factory=EmotionProcessor,
     rtc_configuration=RTC_CONFIGURATION,
-    media_stream_constraints={"video": True, "audio": False},
+    media_stream_constraints=constraints,
 )
