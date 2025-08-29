@@ -59,9 +59,15 @@ st.subheader("📹 Kamera Realtime")
 confidence_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25, 0.05)
 iou_threshold = st.slider("IoU Threshold (NMS)", 0.0, 1.0, 0.5, 0.05)
 
+# --- Dropdown kamera
+camera_option = st.selectbox(
+    "Pilih Kamera",
+    ["Default", "Kamera Depan (user)", "Kamera Belakang (environment)"]
+)
+
 # --- Konfigurasi WebRTC
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"}]}]
 )
 
 # === Video Processor ===
@@ -86,13 +92,20 @@ class EmotionProcessor(VideoProcessorBase):
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# Jalankan kamera dengan WebRTC
+# --- Set constraints kamera
+constraints = {"video": True, "audio": False}
+if camera_option == "Kamera Depan (user)":
+    constraints = {"video": {"facingMode": "user"}, "audio": False}
+elif camera_option == "Kamera Belakang (environment)":
+    constraints = {"video": {"facingMode": "environment"}, "audio": False}
+
+# --- Jalankan kamera dengan WebRTC
 webrtc_streamer(
     key="emotion-detect",
     mode=WebRtcMode.RECVONLY,
     video_processor_factory=EmotionProcessor,
     rtc_configuration=RTC_CONFIGURATION,
-    media_stream_constraints={"video": True, "audio": False},
+    media_stream_constraints=constraints,
     async_processing=True,
 )
 
