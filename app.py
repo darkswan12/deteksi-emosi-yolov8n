@@ -37,7 +37,7 @@ def get_class_image(class_name):
 
 # === Tampilan Streamlit ===
 st.title("🎭 Deteksi Emosi Wajah Realtime")
-st.write("Aplikasi ini dapat mengenali ekspresi wajah menggunakan **YOLOv8 Classification**.")
+st.write("Aplikasi ini dapat mengenali ekspresi wajah dengan menggunakan model CNN.")
 
 st.subheader("✨ Emosi yang dapat dikenali:")
 cols = st.columns(4)
