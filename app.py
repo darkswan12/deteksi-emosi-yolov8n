@@ -95,7 +95,7 @@ elif camera_option == "Kamera Belakang (environment)":
 # --- Jalankan kamera dengan WebRTC
 webrtc_streamer(
     key="emotion-detect",
-    mode=WebRtcMode.RECVONLY,
+    mode=WebRtcMode.SENDRECV,
     video_processor_factory=lambda:EmotionProcessor(model, confidence_threshold, iou_threshold),
     rtc_configuration= {
         "iceServers": [
