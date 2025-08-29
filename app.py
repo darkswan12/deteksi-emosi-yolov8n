@@ -59,11 +59,6 @@ st.subheader("📹 Kamera Realtime")
 confidence_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25, 0.05)
 iou_threshold = st.slider("IoU Threshold (NMS)", 0.0, 1.0, 0.5, 0.05)
 
-# --- Dropdown kamera
-camera_option = st.selectbox(
-    "Pilih Kamera",
-    ["Default", "Kamera Depan (user)", "Kamera Belakang (environment)"]
-)
 
 # === Video Processor ===
 class EmotionProcessor(VideoProcessorBase):
