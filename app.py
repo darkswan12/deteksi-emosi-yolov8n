@@ -99,7 +99,7 @@ webrtc_streamer(
     key="emotion-detect",
     mode=WebRtcMode.RECVONLY,
     video_processor_factory=EmotionProcessor,
-    rtc_configuration= 
+    rtc_configuration= {
         "iceServers": [
             {"urls": ["stun:stun.l.google.com:19302"]},
             {"urls": ["stun:stun1.l.google.com:19302"]},
@@ -111,6 +111,7 @@ webrtc_streamer(
             {"urls": ["stun:stun.stunprotocol.org:3478"]},
             {"urls": ["stun:stun.voipbuster.com:3478"]},
         ]
+    },
     media_stream_constraints=constraints,
     async_processing=True,
 )
