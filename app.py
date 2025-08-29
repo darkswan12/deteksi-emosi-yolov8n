@@ -67,25 +67,23 @@ camera_option = st.selectbox(
 
 # === Video Processor ===
 class EmotionProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.conf = confidence_threshold
-        self.iou = iou_threshold
+    def __init__(self, model, conf, iou):
+        self.model = model
+        self.conf = conf
+        self.iou = iou
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
-
-        # Prediksi emosi
-        results = model.predict(img, imgsz=224, conf=self.conf, iou=self.iou, verbose=False)
+        results = self.model.predict(img, imgsz=224, conf=self.conf, iou=self.iou, verbose=False)
         probs = results[0].probs
         cls_id = int(probs.top1)
         conf = float(probs.top1conf)
         pred_class = list(classes.keys())[cls_id]
         label = f"{classes[pred_class]} ({conf:.2f})"
-
         cv2.putText(img, label, (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
-
         return av.VideoFrame.from_ndarray(img, format="bgr24")
+
 
 # --- Set constraints kamera
 constraints = {"video": True, "audio": False}
