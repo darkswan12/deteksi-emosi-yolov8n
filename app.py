@@ -4,7 +4,7 @@ import os
 from PIL import Image
 import cv2
 import av
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration, WebRtcMode
 
 # === Load Model ===
 @st.cache_resource
@@ -82,7 +82,7 @@ class EmotionProcessor(VideoProcessorBase):
 # Jalankan kamera dengan WebRTC (otomatis ada tombol Start/Stop)
 webrtc_streamer(
     key="emotion-detect",
-    mode="recvonly",
+    mode=WebRtcMode.RECVONLY,   # ✅ pakai enum
     video_processor_factory=EmotionProcessor,
     rtc_configuration=RTC_CONFIGURATION,
     media_stream_constraints={"video": True, "audio": False},
