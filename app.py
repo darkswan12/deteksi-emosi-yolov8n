@@ -65,24 +65,6 @@ camera_option = st.selectbox(
     ["Default", "Kamera Depan (user)", "Kamera Belakang (environment)"]
 )
 
-# --- Konfigurasi WebRTC
-RTC_CONFIGURATION = RTCConfiguration(
-    {
-        "iceServers": [
-            {"urls": ["stun:stun.l.google.com:19302"]},
-            {"urls": ["stun:stun1.l.google.com:19302"]},
-            {"urls": ["stun:stun2.l.google.com:19302"]},
-            {"urls": ["stun:stun3.l.google.com:19302"]},
-            {"urls": ["stun:stun4.l.google.com:19302"]},
-            {"urls": ["stun:stun.services.mozilla.com"]},
-            {"urls": ["stun:stun.nextcloud.com:3478"]},
-            {"urls": ["stun:stun.stunprotocol.org:3478"]},
-            {"urls": ["stun:stun.voipbuster.com:3478"]},
-        ]
-    }
-)
-
-
 # === Video Processor ===
 class EmotionProcessor(VideoProcessorBase):
     def __init__(self):
@@ -117,7 +99,21 @@ webrtc_streamer(
     key="emotion-detect",
     mode=WebRtcMode.RECVONLY,
     video_processor_factory=EmotionProcessor,
-    rtc_configuration=RTC_CONFIGURATION,
+    rtc_configuration= RTCConfiguration(
+        {
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun3.l.google.com:19302"]},
+                {"urls": ["stun:stun4.l.google.com:19302"]},
+                {"urls": ["stun:stun.services.mozilla.com"]},
+                {"urls": ["stun:stun.nextcloud.com:3478"]},
+                {"urls": ["stun:stun.stunprotocol.org:3478"]},
+                {"urls": ["stun:stun.voipbuster.com:3478"]},
+            ]
+        }
+    )
     media_stream_constraints=constraints,
     async_processing=True,
 )
