@@ -59,7 +59,6 @@ st.subheader("📹 Kamera Realtime")
 confidence_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25, 0.05)
 iou_threshold = st.slider("IoU Threshold (NMS)", 0.0, 1.0, 0.5, 0.05)
 
-
 # === Video Processor ===
 class EmotionProcessor(VideoProcessorBase):
     def __init__(self, model, conf, iou):
@@ -79,14 +78,6 @@ class EmotionProcessor(VideoProcessorBase):
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-
-# --- Set constraints kamera
-constraints = {"video": True, "audio": False}
-if camera_option == "Kamera Depan (user)":
-    constraints = {"video": {"facingMode": "user"}, "audio": False}
-elif camera_option == "Kamera Belakang (environment)":
-    constraints = {"video": {"facingMode": "environment"}, "audio": False}
-
 # --- Jalankan kamera dengan WebRTC
 webrtc_streamer(
     key="emotion-detect",
@@ -105,7 +96,7 @@ webrtc_streamer(
             {"urls": ["stun:stun.voipbuster.com:3478"]},
         ]
     },
-    media_stream_constraints=constraints,
+    media_stream_constraints={"video": True, "audio": False},
     async_processing=True,
 )
 
